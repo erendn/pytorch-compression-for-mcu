@@ -32,7 +32,7 @@ else:
 
 dataset_name = 'mnist' # change this for different networks. can be 'mnist' or 'cifar10'
 
-quantize_input = dataset_name != 'cifar10'
+quantize_input = dataset_name != 'cifar10' # change this for input quantization. can be True or False
 
 if dataset_name == 'cifar10':
     # Example network on CIFAR10 dataset
@@ -125,10 +125,10 @@ best_model, initial_acc = utils.train_model(model, data_train_loader, data_test_
 
 print(best_model)
 
-torch.save(best_model, './saves/'+dataset_name+'/original.ptmodel')
+torch.save(best_model, './saves/'+dataset_name+'/original.pt')
 
 # +-+-+-+ BINARY SEARCH FOR OPTIMAL SPARSITY VALUE +-+-+-+
-current_model = torch.load("./saves/"+dataset_name+"/original.ptmodel").to(device) # load network from original.py
+current_model = torch.load("./saves/"+dataset_name+"/original.pt").to(device) # load network from original.py
 best_model = current_model
 
 tolerated_acc_loss = 0.01 # manual parameter to tolerate accuracy loss
@@ -152,11 +152,11 @@ final_acc = utils.evaluate_model(best_model, data_test_loader)
 result_str = "Initial Accuracy: " + str(initial_acc) + " Sparsity: " + str(best_sparsity) + " Accuracy: " + str(final_acc)
 print("Best sparsity found! " + result_str)
 
-torch.save(best_model, './saves/'+dataset_name+'/pruned.ptmodel')
+torch.save(best_model, './saves/'+dataset_name+'/pruned.pt')
 
 middle_acc = utils.evaluate_model(best_model, data_test_loader)
 
-middle_model = torch.load("./saves/"+dataset_name+"/original.ptmodel").to(device) # load network from original.py
+middle_model = torch.load("./saves/"+dataset_name+"/original.pt").to(device) # load network from original.py
 model_params = list(best_model.parameters())
 q_count = 0
 with torch.no_grad():
@@ -224,7 +224,7 @@ for name, param in best_model.state_dict().items(): # extract weights and biases
         layer_parameters[layer_name]['quantized'] = torch.div(torch.Tensor(np.array(quantized)), torch.Tensor(layer_parameters[layer_name]['scale'])).type(torch.int8).numpy()
         layer_parameters[layer_name]['indices'] = indices
 
-torch.save(best_model, './saves/'+dataset_name+'/quantized.ptmodel')
+torch.save(best_model, './saves/'+dataset_name+'/quantized.pt')
 
 # weights header and network generator. This generates main.h and main.c
 weights_file = open('./outputs/'+dataset_name+'/main.h', 'w')
