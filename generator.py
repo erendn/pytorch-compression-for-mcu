@@ -23,16 +23,20 @@ import torch.nn.functional as F
 
 import numpy as np
 
-dtype = torch.float32
-
-if 0:
-    device = torch.device('cuda')
-else:
-    device = torch.device('cpu')
-
 dataset_name = 'mnist' # change this for different networks. can be 'mnist' or 'cifar10'
 
 quantize_input = dataset_name != 'cifar10' # change this for input quantization. can be True or False
+
+pre_trained = True # change this if your model is pre-trained. can be True or False
+
+use_cuda = False # change this if yor GPU supports CUDA. can be True or False
+
+dtype = torch.float32
+
+if use_cuda:
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
 
 if dataset_name == 'cifar10':
     # Example network on CIFAR10 dataset
@@ -121,15 +125,20 @@ elif dataset_name == 'mnist':
 Path("./saves/"+dataset_name).mkdir(parents=True, exist_ok=True)
 Path("./outputs/"+dataset_name).mkdir(parents=True, exist_ok=True)
 
-best_model, initial_acc = utils.train_model(model, data_train_loader, data_test_loader, 4, optim.Adam(model.parameters(), lr=2e-3), True)
+best_model = None
+initial_acc = None
 
-print(best_model)
-
-torch.save(best_model, './saves/'+dataset_name+'/original.pt')
+if not pre_trained:
+    best_model, initial_acc = utils.train_model(model, data_train_loader, data_test_loader, 4, optim.Adam(model.parameters(), lr=2e-3), True)
+    print(best_model)
+    torch.save(best_model, './saves/'+dataset_name+'/original.pt')
 
 # +-+-+-+ BINARY SEARCH FOR OPTIMAL SPARSITY VALUE +-+-+-+
-current_model = torch.load("./saves/"+dataset_name+"/original.pt").to(device) # load network from original.py
+current_model = torch.load("./saves/"+dataset_name+"/original.pt").to(device) # load network. make sure to name correctly for pre-trained networks
 best_model = current_model
+
+if initial_acc is None:
+    initial_acc = utils.evaluate_model(best_model, data_test_loader)
 
 tolerated_acc_loss = 0.01 # manual parameter to tolerate accuracy loss
 min_search_step = 0.001 # manual parameter to stop the binary search

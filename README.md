@@ -24,6 +24,16 @@ Some networks might be sensitive to input activation quantization. To disable in
 quantize_input = dataset_name != 'cifar10' # change this for input quantization. can be True or False
 ```
 
+If your network is pre-trained you can disable initial training. Your pre-trained network should be in the saves folder with the correct name (`original.pt`). To disable initial training, change this line in `generator.py`:
+```python
+pre_trained = True # change this if your model is pre-trained. can be True or False
+```
+
+If your GPU supports CUDA, you can enable CUDA usage to speedup the process. CPU will be used if CUDA is not enabled. To use CUDA, change this line in `generator.py`:
+```python
+use_cuda = False # change this if yor GPU supports CUDA. can be True or False
+```
+
 You can also use this generator with networks other than **LeNet-5** or the **CIFAR-10 test network** implemented. You need to create the network using PyTorch building blocks and adjust the optimizer. Supported PyTorch building blocks are:
 * Conv2d
 * MaxPool2d
